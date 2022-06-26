@@ -1,14 +1,14 @@
+from xml.sax.handler import feature_validation
 import numpy as np 
 from tqdm import tqdm 
 
-from monocular import VisualOdometry
+from monocular import VisualOdometry, VALID_FEATURE_DETECTORS
 from utils import plot_results 
 
 
-def main():
-    data_dir = "data/KITTI_sequence_1"
-    visual_odometry = VisualOdometry(data_dir=data_dir)
-
+def estimate_path(data_dir: str, feature_detector: str, verbose: bool = False):
+    
+    visual_odometry = VisualOdometry(data_dir=data_dir, feature_detector=feature_detector)
     gt_path = []
     estimated_path = []
 
@@ -22,16 +22,31 @@ def main():
             )
             cur_pose = np.matmul(cur_pose, np.linalg.inv(transformation))
 
-            print(f"\nGround truth pose: {str(gt_pose)}")
-            print(f"\nCurrent pose: {str(cur_pose)}")
-            print("--" * 25)
-            print(f"Current pose x,y: {str(cur_pose[0, 3])}  {str(cur_pose[2, 3])}")
-            print(f"GT pose x,y: {str(gt_pose[0, 3])}  {str(gt_pose[2, 3])}")
+            if verbose:
+                print(f"\nGround truth pose: {str(gt_pose)}")
+                print(f"\nCurrent pose: {str(cur_pose)}")
+                print("--" * 25)
+                print(f"Current pose x,z: {str(cur_pose[0, 3])}  {str(cur_pose[2, 3])}")
+                print(f"GT pose x,z: {str(gt_pose[0, 3])}  {str(gt_pose[2, 3])}")
 
         gt_path.append((gt_pose[0, 3], gt_pose[2, 3]))
         estimated_path.append((cur_pose[0, 3], cur_pose[2, 3]))
 
-    plot_results(gt_path, estimated_path)
+    return gt_path, estimated_path
+
+
+def main():
+    data_dir = "data/KITTI_sequence_1"
+    verbose = False
+
+    for feature_detector in VALID_FEATURE_DETECTORS:
+        gt_path, estimated_path = estimate_path(
+            data_dir=data_dir, 
+            feature_detector=feature_detector, 
+            verbose=verbose,
+        )
+
+        plot_results(gt_path, estimated_path, f"Feature detector: {feature_detector}")
 
 
 if __name__ == "__main__":

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt 
 
 
-def plot_results(gt_path, estimated_path, save: str = ""):
+def plot_results(gt_path: list, estimated_path: list, title: str, save: str = ""):
     "Plot the estimated path and the ground truth path." 
     plt.figure(figsize=(16,9))
     plt.plot(
@@ -15,7 +15,8 @@ def plot_results(gt_path, estimated_path, save: str = ""):
         'b', 
         label="Estimated path")
     plt.xlabel('x')
-    plt.ylabel('y') 
+    plt.ylabel('z') 
+    plt.title(title)
     plt.legend()
     plt.show()
 

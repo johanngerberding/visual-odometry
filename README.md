@@ -8,3 +8,4 @@ Starting with simple Monocular Visual Odometry in Python.
 * implement Stereo Vision Odometry 
 * implement everything in C++
 * make visualizations prettier 
+* I think SIFT doesn't work correctly

@@ -4,8 +4,10 @@ import cv2
 from typing import Tuple, List  
 
 
+VALID_FEATURE_DETECTORS = ['orb', 'sift']
+
 class VisualOdometry:
-    def __init__(self, data_dir: str):
+    def __init__(self, data_dir: str, feature_detector: str = "orb"):
         self.data_dir = data_dir
         # load camera intrinsic matrix K and projection matrix P  
         self.K, self.P = self._load_calib(
@@ -14,19 +16,28 @@ class VisualOdometry:
         self.gt_poses = self._load_poses(
             os.path.join(self.data_dir, 'poses.txt')
         )
+        print(self.gt_poses[0])
         self.images = self._load_images(
             os.path.join(self.data_dir, 'image_l')
         )
         # load orb algorithm and limit features to max 3000 
-        self.feature_detector = cv2.ORB_create(nfeatures=3000)
-        # use the Flann matcher  
-        self.matcher = cv2.FlannBasedMatcher(
+        assert feature_detector in VALID_FEATURE_DETECTORS
+        if feature_detector == "orb": 
+            self.feature_detector = cv2.ORB_create(nfeatures=3000)
             indexParams={
                 'algorithm': 6, # flann index lsh 
                 'table_number': 6,
                 'key_size': 12,
                 'multi_probe_level': 1 
-            }, 
+            }
+        elif feature_detector == "sift":
+            self.feature_detector = cv2.xfeatures2d.SIFT_create()
+            FLANN_INDEX_KDTREE = 0
+            indexParams = dict(algorithm=FLANN_INDEX_KDTREE, trees=5) 
+        
+        # use the Flann matcher  
+        self.matcher = cv2.FlannBasedMatcher(
+            indexParams=indexParams, 
             searchParams={
                 'checks': 50
             }
@@ -107,6 +118,7 @@ class VisualOdometry:
             self.images[idx], None,
         )
 
+        #matches_1 = self.matcher.match(desc1, desc2)
         matches = self.matcher.knnMatch(
             desc1, desc2, k=2,
         )
